@@ -368,6 +368,9 @@ struct bar_config {
 		char *focused_workspace_border;
 		char *focused_workspace_bg;
 		char *focused_workspace_text;
+		char *focused_title_border;
+		char *focused_title_bg;
+		char *focused_title_text;
 		char *active_workspace_border;
 		char *active_workspace_bg;
 		char *active_workspace_text;
@@ -381,6 +384,10 @@ struct bar_config {
 		char *binding_mode_bg;
 		char *binding_mode_text;
 	} colors;
+	struct {
+    uint32_t max_length;
+    bool only_active_output;
+	} focused_title;
 
 #if HAVE_TRAY
 	char *icon_theme;

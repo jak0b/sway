@@ -1169,6 +1169,13 @@ json_object *ipc_json_describe_bar_config(struct bar_config *bar) {
 	json_object_object_add(colors, "focused_workspace_text",
 			json_object_new_string(bar->colors.focused_workspace_text));
 
+	json_object_object_add(colors, "focused_title_border",
+			json_object_new_string(bar->colors.focused_title_border));
+	json_object_object_add(colors, "focused_title_bg",
+			json_object_new_string(bar->colors.focused_title_bg));
+	json_object_object_add(colors, "focused_title_text",
+			json_object_new_string(bar->colors.focused_title_text));
+
 	json_object_object_add(colors, "inactive_workspace_border",
 			json_object_new_string(bar->colors.inactive_workspace_border));
 	json_object_object_add(colors, "inactive_workspace_bg",
@@ -1215,6 +1222,15 @@ json_object *ipc_json_describe_bar_config(struct bar_config *bar) {
 	}
 
 	json_object_object_add(json, "colors", colors);
+
+	json_object *focused_title = json_object_new_object();
+
+	json_object_object_add(focused_title, "max_length",
+			json_object_new_int(bar->focused_title.max_length));
+	json_object_object_add(focused_title, "only_active_output",
+			json_object_new_boolean(bar->focused_title.only_active_output));
+
+	json_object_object_add(json, "focused_title", focused_title);
 
 	if (bar->bindings->length > 0) {
 		json_object *bindings = json_object_new_array();

@@ -58,6 +58,9 @@ void free_bar_config(struct bar_config *bar) {
 	free(bar->colors.focused_workspace_border);
 	free(bar->colors.focused_workspace_bg);
 	free(bar->colors.focused_workspace_text);
+	free(bar->colors.focused_title_border);
+	free(bar->colors.focused_title_bg);
+	free(bar->colors.focused_title_text);
 	free(bar->colors.active_workspace_border);
 	free(bar->colors.active_workspace_bg);
 	free(bar->colors.active_workspace_text);
@@ -134,6 +137,15 @@ struct bar_config *default_bar_config(void) {
 	if (!(bar->colors.focused_workspace_text = strndup("#ffffffff", 9))) {
 		goto cleanup;
 	}
+	if (!(bar->colors.focused_title_border = strndup("#000000ff", 9))) {
+		goto cleanup;
+	}
+	if (!(bar->colors.focused_title_bg = strndup("#000000ff", 9))) {
+		goto cleanup;
+	}
+	if (!(bar->colors.focused_title_text = strndup("#ffffffff", 9))) {
+		goto cleanup;
+	}
 	if (!(bar->colors.active_workspace_border = strndup("#333333ff", 9))) {
 		goto cleanup;
 	}
@@ -169,6 +181,10 @@ struct bar_config *default_bar_config(void) {
 	bar->colors.binding_mode_border = NULL;
 	bar->colors.binding_mode_bg = NULL;
 	bar->colors.binding_mode_text = NULL;
+
+  // focused_title settings
+  bar->focused_title.max_length = 64;
+  bar->focused_title.only_active_output = true;
 
 #if HAVE_TRAY
 	bar->tray_padding = 2;

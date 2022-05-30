@@ -11,6 +11,7 @@ static const struct cmd_handler bar_colors_handlers[] = {
 	{ "focused_background", bar_colors_cmd_focused_background },
 	{ "focused_separator", bar_colors_cmd_focused_separator },
 	{ "focused_statusline", bar_colors_cmd_focused_statusline },
+	{ "focused_title", bar_colors_cmd_focused_title },
 	{ "focused_workspace", bar_colors_cmd_focused_workspace },
 	{ "inactive_workspace", bar_colors_cmd_inactive_workspace },
 	{ "separator", bar_colors_cmd_separator },
@@ -149,4 +150,13 @@ struct cmd_results *bar_colors_cmd_urgent_workspace(int argc, char **argv) {
 		&(config->current_bar->colors.urgent_workspace_text)
 	};
 	return parse_three_colors(colors, "urgent_workspace", argc, argv);
+}
+
+struct cmd_results *bar_colors_cmd_focused_title(int argc, char **argv) {
+	char **colors[3] = {
+		&(config->current_bar->colors.focused_title_border),
+		&(config->current_bar->colors.focused_title_bg),
+		&(config->current_bar->colors.focused_title_text)
+	};
+	return parse_three_colors(colors, "focused_title", argc, argv);
 }
