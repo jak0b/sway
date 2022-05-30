@@ -18,6 +18,7 @@ struct loop;
 struct swaybar {
 	char *id;
 	char *mode;
+	char *focused_title;
 	bool mode_pango_markup;
 
 	// only relevant when bar is in "hide" mode

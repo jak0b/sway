@@ -551,4 +551,5 @@ void bar_teardown(struct swaybar *bar) {
 	}
 	free(bar->id);
 	free(bar->mode);
+	free(bar->focused_title);
 }

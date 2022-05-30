@@ -53,6 +53,25 @@ char *parse_font(const char *font) {
 	return new_font;
 }
 
+char *fmt_focused_title(const char *title, size_t max_len, const char* ind) {
+  /* TODO: make sure that max_len constraint also works for unicode strings */
+  size_t title_len = strlen(title);
+  size_t ind_len = strlen(ind);
+  char *buffer = NULL;
+
+  if (title_len < max_len) {
+    buffer = strdup(title);
+  } else {
+    if (title[max_len-1] == ' ')
+      max_len--;
+    buffer = (char*) malloc(max_len + ind_len + 1);
+    strncpy(buffer, title, max_len);
+    strcpy(buffer + max_len, ind);
+    buffer[max_len + ind_len] = '\0';
+  }
+  return buffer;
+}
+
 static void ipc_parse_colors(
 		struct swaybar_config *config, json_object *colors) {
 	struct {
@@ -427,9 +446,10 @@ bool ipc_initialize(struct swaybar *bar) {
 	struct swaybar_config *config = bar->config;
 	char subscribe[128]; // suitably large buffer
 	len = snprintf(subscribe, 128,
-			"[ \"barconfig_update\" , \"bar_state_update\" %s %s ]",
+			"[ \"barconfig_update\" , \"bar_state_update\" %s %s %s ]",
 			config->binding_mode_indicator ? ", \"mode\"" : "",
-			config->workspace_buttons ? ", \"workspace\"" : "");
+			config->workspace_buttons ? ", \"workspace\"" : "",
+			config->show_focused_title ? ", \"window\"" : "");
 	free(ipc_single_command(bar->ipc_event_socketfd,
 			IPC_SUBSCRIBE, subscribe, &len));
 	return true;
@@ -583,8 +603,8 @@ bool handle_ipc_readable(struct swaybar *bar) {
 			determine_bar_visibility(bar, false);
 		} else {
 			sway_log(SWAY_ERROR, "failed to parse response");
-			bar_is_dirty = false;
-			break;
+      bar_is_dirty = false;
+      break;
 		}
 		if (json_object_object_get_ex(result,
 					"pango_markup", &json_pango_markup)) {
@@ -592,6 +612,28 @@ bool handle_ipc_readable(struct swaybar *bar) {
 		}
 		break;
 	}
+  case IPC_EVENT_WINDOW:
+		json_object *json_container, *json_name;
+		if (json_object_object_get_ex(result, "container", &json_container)) {
+      if (json_object_object_get_ex(json_container, "name", &json_name)) {
+        if (json_name) {
+          const char *new_name = json_object_get_string(json_name);
+          free(bar->focused_title);
+          bar->focused_title =
+            fmt_focused_title(new_name, bar->config->focused_title_max_length, "...");
+        } else {
+          sway_log(SWAY_ERROR, "failed to parse response");
+          bar_is_dirty = false;
+        }
+      } else {
+        sway_log(SWAY_ERROR, "failed to parse response");
+        bar_is_dirty = false;
+      }
+		} else {
+			sway_log(SWAY_ERROR, "failed to parse response");
+      bar_is_dirty = false;
+		}
+    break;
 	case IPC_EVENT_BARCONFIG_UPDATE:
 		bar_is_dirty = handle_barconfig_update(bar, resp->payload, result);
 		break;

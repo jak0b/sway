@@ -31,6 +31,9 @@ struct swaybar_config *init_config(void) {
 	config->hidden_state = strdup("hide");
 	config->sep_symbol = NULL;
 	config->strip_workspace_numbers = false;
+	config->show_focused_title = true;
+	config->focused_title_only_active_output = false;
+	config->focused_title_max_length = 64;
 	config->strip_workspace_name = false;
 	config->binding_mode_indicator = true;
 	config->wrap_scroll = false;
@@ -76,6 +79,10 @@ struct swaybar_config *init_config(void) {
 	config->colors.binding_mode.border = 0x2F343AFF;
 	config->colors.binding_mode.background = 0x900000FF;
 	config->colors.binding_mode.text = 0xFFFFFFFF;
+
+	config->colors.focused_title.border = 0x131A24FF;
+	config->colors.focused_title.background = 0x131A24FF;
+	config->colors.focused_title.text = 0xAEAFB0FF;
 
 #if HAVE_TRAY
 	config->tray_padding = 2;

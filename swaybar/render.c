@@ -541,7 +541,7 @@ static uint32_t render_status_line(struct render_context *ctx, double *x) {
 }
 
 static uint32_t render_binding_mode_indicator(struct render_context *ctx,
-		double x) {
+		double *x) {
 	struct swaybar_output *output = ctx->output;
 	const char *mode = output->bar->mode;
 	if (!mode) {
@@ -575,25 +575,80 @@ static uint32_t render_binding_mode_indicator(struct render_context *ctx,
 	cairo_set_operator(cairo, CAIRO_OPERATOR_SOURCE);
 	cairo_set_source_u32(cairo, config->colors.binding_mode.background);
 	ctx->background_color = config->colors.binding_mode.background;
-	cairo_rectangle(cairo, x, 0, width, height);
+	cairo_rectangle(cairo, *x, 0, width, height);
 	cairo_fill(cairo);
 
 	cairo_set_source_u32(cairo, config->colors.binding_mode.border);
-	cairo_rectangle(cairo, x, 0, width, border_width);
+	cairo_rectangle(cairo, *x, 0, width, border_width);
 	cairo_fill(cairo);
-	cairo_rectangle(cairo, x, 0, border_width, height);
+	cairo_rectangle(cairo, *x, 0, border_width, height);
 	cairo_fill(cairo);
-	cairo_rectangle(cairo, x + width - border_width, 0, border_width, height);
+	cairo_rectangle(cairo, *x + width - border_width, 0, border_width, height);
 	cairo_fill(cairo);
-	cairo_rectangle(cairo, x, height - border_width, width, border_width);
+	cairo_rectangle(cairo, *x, height - border_width, width, border_width);
 	cairo_fill(cairo);
 
 	double text_y = height / 2.0 - text_height / 2.0;
 	cairo_set_source_u32(cairo, config->colors.binding_mode.text);
-	cairo_move_to(cairo, x + width / 2 - text_width / 2, (int)floor(text_y));
+	cairo_move_to(cairo, *x + width / 2 - text_width / 2, (int)floor(text_y));
 	choose_text_aa_mode(ctx, config->colors.binding_mode.text);
 	render_text(cairo, config->font, 1, output->bar->mode_pango_markup,
 			"%s", mode);
+
+  *x += width;
+	return output->height;
+}
+
+static uint32_t render_focused_title(struct render_context *ctx,
+		double *x) {
+	struct swaybar_output *output = ctx->output;
+	struct swaybar_config *config = output->bar->config;
+
+  if (config->focused_title_only_active_output && !output->focused) {
+		return 0;
+  }
+
+	const char *focused_title = output->bar->focused_title;
+	if (!focused_title) {
+		return 0;
+	}
+
+	cairo_t *cairo = ctx->cairo;
+	int text_width, text_height;
+	get_text_size(cairo, config->font, &text_width, &text_height, NULL,
+			1, output->bar->mode_pango_markup,
+			"%s", focused_title);
+
+	int ws_vertical_padding = WS_VERTICAL_PADDING;
+	int ws_horizontal_padding = WS_HORIZONTAL_PADDING;
+	int border_width = BORDER_WIDTH;
+
+	uint32_t ideal_height = text_height + ws_vertical_padding * 2
+		+ border_width * 2;
+	uint32_t ideal_surface_height = ideal_height;
+	if (!output->bar->config->height &&
+			output->height < ideal_surface_height) {
+		return ideal_surface_height;
+	}
+	uint32_t width = text_width + ws_horizontal_padding * 2 + border_width * 2;
+	if (width < config->workspace_min_width) {
+		width = config->workspace_min_width;
+	}
+
+	uint32_t height = output->height;
+	cairo_set_operator(cairo, CAIRO_OPERATOR_SOURCE);
+	cairo_set_source_u32(cairo, config->colors.focused_title.background);
+	ctx->background_color = config->colors.focused_title.background;
+	cairo_rectangle(cairo, *x, 0, width, height);
+	cairo_fill(cairo);
+
+	double text_y = height / 2.0 - text_height / 2.0;
+	cairo_set_source_u32(cairo, config->colors.focused_title.text);
+	cairo_move_to(cairo, *x + width / 2 - text_width / 2, (int)floor(text_y));
+	choose_text_aa_mode(ctx, config->colors.focused_title.text);
+	render_text(cairo, config->font, 1, output->bar->mode_pango_markup, "%s", focused_title);
+
+  *x += width;
 	return output->height;
 }
 
@@ -728,9 +783,16 @@ static uint32_t render_to_cairo(struct render_context *ctx) {
 		}
 	}
 	if (config->binding_mode_indicator) {
-		uint32_t h = render_binding_mode_indicator(ctx, x);
+		uint32_t h = render_binding_mode_indicator(ctx, &x);
 		max_height = h > max_height ? h : max_height;
 	}
+
+  x += 2;
+
+  if (config->show_focused_title) {
+		uint32_t h = render_focused_title(ctx, &x);
+		max_height = h > max_height ? h : max_height;
+  }
 
 	return max_height > output->height ? max_height : output->height;
 }

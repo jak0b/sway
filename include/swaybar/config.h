@@ -36,6 +36,9 @@ struct swaybar_config {
 	bool strip_workspace_numbers;
 	bool strip_workspace_name;
 	bool binding_mode_indicator;
+	bool show_focused_title;
+	bool focused_title_only_active_output;
+	uint32_t focused_title_max_length;
 	bool wrap_scroll;
 	bool workspace_buttons;
 	uint32_t workspace_min_width;
@@ -65,6 +68,7 @@ struct swaybar_config {
 		struct box_colors inactive_workspace;
 		struct box_colors urgent_workspace;
 		struct box_colors binding_mode;
+		struct box_colors focused_title;
 	} colors;
 
 #if HAVE_TRAY
